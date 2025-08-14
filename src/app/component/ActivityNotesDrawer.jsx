@@ -1,347 +1,337 @@
-import React, { useState } from 'react';
-import { X, Plus, Activity, Edit2, Phone } from 'lucide-react';
+"use client";
+import React, { useState } from "react";
+import { X, Plus, Activity, Edit2, Phone, Calendar, Clock, AlertCircle, FileText, CheckCircle } from "lucide-react";
 
-const ActivityNotesDrawer = ({ show, customer, type, onClose, onTypeChange, activities, notes, onUpdateActivities, onUpdateNotes }) => {
-  const [newActivity, setNewActivity] = useState({ type: 'Call', description: '', date: '', time: '', priority: 'Medium' });
-  const [newNote, setNewNote] = useState('');
+const ActivityNotesDrawer = ({ show, customer, type, onClose, onTypeChange }) => {
+  // Dummy data
+  const dummyCustomer = customer || { id: 1, name: "John Doe" };
+
+  const [activities, setActivities] = useState({
+    [dummyCustomer.id]: [
+      { id: 1, type: "Call", description: "Follow up about order", date: "2025-08-14", time: "10:00", priority: "High", timestamp: new Date().toISOString() },
+      { id: 2, type: "Email", description: "Send invoice", date: "2025-08-13", time: "14:00", priority: "Medium", timestamp: new Date().toISOString() }
+    ]
+  });
+
+  const [notes, setNotes] = useState({
+    [dummyCustomer.id]: [
+      { id: 1, content: "Customer prefers evening calls.", timestamp: new Date().toISOString() },
+      { id: 2, content: "Check last purchase history.", timestamp: new Date().toISOString() }
+    ]
+  });
+
+  const [newActivity, setNewActivity] = useState({
+    type: "Call",
+    description: "",
+    date: "",
+    time: "",
+    priority: "Medium"
+  });
+  const [newNote, setNewNote] = useState("");
   const [isAddingActivity, setIsAddingActivity] = useState(false);
 
-  const customerActivities = activities[customer?.id] || [
-    {
-      id: 1,
-      type: 'Call',
-      priority: 'Medium',
-      time: '01:10 PM',
-      description: 'Niroj Prajapati',
-      phone: '9845512355',
-      date: '16 June 2025'
-    },
-    {
-      id: 2,
-      type: 'Lead converted to deal',
-      time: '12:10 AM',
-      description: 'Niroj Prajapati',
-      date: '16 June 2025'
-    },
-    {
-      id: 3,
-      type: 'Lead Created',
-      time: '11:10 AM',
-      description: 'Niroj Prajapati',
-      date: '16 June 2025'
-    }
-  ];
-  const customerNotes = notes[customer?.id] || [];
+  const customerId = dummyCustomer?.id;
+  const customerActivities = activities?.[customerId] || [];
+  const customerNotes = notes?.[customerId] || [];
 
   const addActivity = () => {
-    if (newActivity.description && newActivity.date && newActivity.time) {
-      const activity = {
-        ...newActivity,
-        id: Date.now(),
-        timestamp: new Date().toISOString()
-      };
-      onUpdateActivities(prev => ({
+    if (newActivity.description && newActivity.date && newActivity.time && customerId) {
+      const activity = { ...newActivity, id: Date.now(), timestamp: new Date().toISOString() };
+      setActivities(prev => ({
         ...prev,
-        [customer.id]: [...(prev[customer.id] || []), activity]
+        [customerId]: [...(prev[customerId] || []), activity]
       }));
-      setNewActivity({ type: 'Call', description: '', date: '', time: '', priority: 'Medium' });
+      setNewActivity({ type: "Call", description: "", date: "", time: "", priority: "Medium" });
       setIsAddingActivity(false);
     }
   };
 
   const addNote = () => {
-    if (newNote.trim()) {
-      const note = {
-        id: Date.now(),
-        content: newNote,
-        timestamp: new Date().toISOString()
-      };
-      onUpdateNotes(prev => ({
+    if (newNote.trim() && customerId) {
+      const note = { id: Date.now(), content: newNote, timestamp: new Date().toISOString() };
+      setNotes(prev => ({
         ...prev,
-        [customer.id]: [...(prev[customer.id] || []), note]
+        [customerId]: [...(prev[customerId] || []), note]
       }));
-      setNewNote('');
+      setNewNote("");
+    }
+  };
+
+  const getActivityIcon = (activityType) => {
+    switch (activityType) {
+      case "Call": return <Phone size={16} className="text-emerald-600" />;
+      case "Email": return <FileText size={16} className="text-blue-600" />;
+      case "Meeting": return <Calendar size={16} className="text-purple-600" />;
+      case "Follow-up": return <CheckCircle size={16} className="text-orange-600" />;
+      default: return <Activity size={16} className="text-gray-600" />;
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "High": return "bg-red-100 text-red-800 border-red-200";
+      case "Medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "Low": return "bg-green-100 text-green-800 border-green-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose}></div>
-      
-      {/* Drawer */}
-      <div className="absolute right-0 top-0 h-full w-96 bg-white shadow-xl flex flex-col">
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-2/5 min-w-[520px] h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
         {/* Header */}
-        <div className="bg-indigo-600 text-white p-4 flex items-center justify-between">
-          <h2 className="text-lg font-medium">{customer?.name}</h2>
-          <button onClick={onClose} className="text-white hover:text-gray-200">
-            <X size={20} />
-          </button>
+        <div className="relative bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-6 border-b border-slate-700">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
+          <div className="relative flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">{dummyCustomer.name}</h2>
+              <p className="text-slate-300 text-sm mt-1">Customer Profile</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-white border-b border-gray-200">
+        <div className="flex bg-slate-50 border-b border-slate-200">
           <button
-            onClick={() => onTypeChange('activity')}
-            className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center space-x-2 ${
-              type === 'activity'
-                ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+            onClick={() => onTypeChange("activity")}
+            className={`flex-1 py-4 px-6 flex items-center justify-center space-x-3 text-sm font-medium transition-all duration-200 relative ${
+              type === "activity"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
             }`}
           >
-            <Activity size={16} />
-            <span>Activity</span>
+            <Activity size={18} />
+            <span>Activities</span>
+            {type === "activity" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            )}
           </button>
           <button
-            onClick={() => onTypeChange('notes')}
-            className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center space-x-2 ${
-              type === 'notes'
-                ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+            onClick={() => onTypeChange("notes")}
+            className={`flex-1 py-4 px-6 flex items-center justify-center space-x-3 text-sm font-medium transition-all duration-200 relative ${
+              type === "notes"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
             }`}
           >
-            <Edit2 size={16} />
+            <Edit2 size={18} />
             <span>Notes</span>
+            {type === "notes" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            )}
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
-          {type === 'activity' ? (
-            <div className="h-full flex flex-col">
-              {/* Activity Header */}
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">Activity</h3>
+        <div className="flex-1 overflow-auto bg-slate-50">
+          {type === "activity" ? (
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">Activity Timeline</h3>
+                  <p className="text-slate-600 text-sm mt-1">{customerActivities.length} activities recorded</p>
+                </div>
                 <button
                   onClick={() => setIsAddingActivity(true)}
-                  className="flex items-center space-x-1 px-3 py-1 text-sm text-indigo-600 border border-indigo-600 rounded-md hover:bg-indigo-50"
+                  className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  <Plus size={16} />
-                  <span>Add</span>
+                  <Plus size={16} /> 
+                  <span>New Activity</span>
                 </button>
               </div>
 
               {/* Add Activity Form */}
               {isAddingActivity && (
-                <div className="p-4 bg-gray-50 border-b border-gray-200">
-                  <div className="space-y-3">
-                    <select
-                      value={newActivity.type}
-                      onChange={(e) => setNewActivity(prev => ({...prev, type: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                    >
-                      <option value="Call">Call</option>
-                      <option value="Email">Email</option>
-                      <option value="Meeting">Meeting</option>
-                      <option value="Follow-up">Follow-up</option>
-                    </select>
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="date"
-                        value={newActivity.date}
-                        onChange={(e) => setNewActivity(prev => ({...prev, date: e.target.value}))}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                      />
-                      <input
-                        type="time"
-                        value={newActivity.time}
-                        onChange={(e) => setNewActivity(prev => ({...prev, time: e.target.value}))}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                <div className="mb-6 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+                  <h4 className="text-base font-medium text-slate-900 mb-4">Create New Activity</h4>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wide">Type</label>
+                        <select
+                          value={newActivity.type}
+                          onChange={(e) => setNewActivity(prev => ({ ...prev, type: e.target.value }))}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        >
+                          <option value="Call">Call</option>
+                          <option value="Email">Email</option>
+                          <option value="Meeting">Meeting</option>
+                          <option value="Follow-up">Follow-up</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wide">Priority</label>
+                        <select
+                          value={newActivity.priority}
+                          onChange={(e) => setNewActivity(prev => ({ ...prev, priority: e.target.value }))}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        >
+                          <option value="High">High Priority</option>
+                          <option value="Medium">Medium Priority</option>
+                          <option value="Low">Low Priority</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wide">Date</label>
+                        <input
+                          type="date"
+                          value={newActivity.date}
+                          onChange={(e) => setNewActivity(prev => ({ ...prev, date: e.target.value }))}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wide">Time</label>
+                        <input
+                          type="time"
+                          value={newActivity.time}
+                          onChange={(e) => setNewActivity(prev => ({ ...prev, time: e.target.value }))}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wide">Description</label>
+                      <textarea
+                        value={newActivity.description}
+                        onChange={(e) => setNewActivity(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Describe the activity..."
+                        rows={3}
+                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
                       />
                     </div>
-
-                    <select
-                      value={newActivity.priority}
-                      onChange={(e) => setNewActivity(prev => ({...prev, priority: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                    >
-                      <option value="High">High</option>
-                      <option value="Medium">Medium</option>
-                      <option value="Low">Low</option>
-                    </select>
-
-                    <textarea
-                      value={newActivity.description}
-                      onChange={(e) => setNewActivity(prev => ({...prev, description: e.target.value}))}
-                      placeholder="Activity description..."
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                    />
-                    
-                    <div className="flex space-x-2">
-                      <button
+                    <div className="flex space-x-3 pt-2">
+                      <button 
                         onClick={() => setIsAddingActivity(false)}
-                        className="flex-1 px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                        className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
                       >
                         Cancel
                       </button>
-                      <button
+                      <button 
                         onClick={addActivity}
-                        className="flex-1 px-3 py-2 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                        className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
                       >
-                        Save
+                        Save Activity
                       </button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Activity Content */}
-              <div className="flex-1 overflow-auto">
-                <div className="p-4">
-                  <div className="text-sm text-gray-600 mb-4">
-                    Click add to create an activity.
-                  </div>
-
-                  {/* History Section */}
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-900 mb-3">History</h4>
-                    
-                    {/* Today Section */}
-                    <div className="text-center py-2">
-                      <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">Today</span>
-                    </div>
-
-                    {/* Activity Items */}
-                    <div className="space-y-4 mt-4">
-                      {customerActivities.map((activity) => (
-                        <div key={activity.id} className="flex items-start space-x-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            activity.type === 'Call' ? 'bg-blue-100' :
-                            activity.type === 'Lead converted to deal' ? 'bg-purple-100' :
-                            'bg-purple-100'
-                          }`}>
-                            {activity.type === 'Call' ? (
-                              <Phone size={14} className="text-blue-600" />
-                            ) : (
-                              <div className={`w-3 h-3 rounded-full ${
-                                activity.type === 'Lead converted to deal' ? 'bg-purple-600' : 'bg-purple-600'
-                              }`}></div>
-                            )}
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium text-gray-900">{activity.type}</p>
-                              <span className="text-xs text-gray-500">{activity.time}</span>
+              {/* Activity List */}
+              <div className="space-y-4">
+                {customerActivities.map((activity, index) => (
+                  <div key={activity.id} className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-900">{activity.type}</h4>
+                            <div className="flex items-center space-x-3 mt-1">
+                              <span className="flex items-center text-xs text-slate-500">
+                                <Calendar size={12} className="mr-1" />
+                                {activity.date}
+                              </span>
+                              <span className="flex items-center text-xs text-slate-500">
+                                <Clock size={12} className="mr-1" />
+                                {activity.time}
+                              </span>
                             </div>
-                            
-                            {activity.priority && (
-                              <div className="flex items-center mt-1">
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  activity.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                                  activity.priority === 'High' ? 'bg-red-100 text-red-800' :
-                                  'bg-green-100 text-green-800'
-                                }`}>
-                                  <div className={`w-2 h-2 rounded-full mr-1 ${
-                                    activity.priority === 'Medium' ? 'bg-yellow-400' :
-                                    activity.priority === 'High' ? 'bg-red-400' :
-                                    'bg-green-400'
-                                  }`}></div>
-                                  {activity.priority}
-                                </span>
-                              </div>
-                            )}
-                            
-                            <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
-                            {activity.phone && (
-                              <p className="text-sm text-gray-500 mt-1">{activity.phone}</p>
-                            )}
                           </div>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(activity.priority)}`}>
+                            {activity.priority}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Date Separator */}
-                    <div className="text-center py-4">
-                      <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">16 June 2025</span>
+                        <p className="text-sm text-slate-600 leading-relaxed">{activity.description}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ))}
+                {customerActivities.length === 0 && (
+                  <div className="text-center py-12">
+                    <Activity size={48} className="mx-auto text-slate-300 mb-4" />
+                    <h3 className="text-sm font-medium text-slate-600 mb-2">No activities yet</h3>
+                    <p className="text-xs text-slate-500">Start by adding your first activity above</p>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col">
-              {/* Notes Header */}
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Notes</h3>
+            <div className="p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">Customer Notes</h3>
+                <p className="text-slate-600 text-sm mt-1">Keep track of important information</p>
+              </div>
+              
+              <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 mb-6">
+                <label className="block text-xs font-medium text-slate-600 mb-3 uppercase tracking-wide">Add New Note</label>
+                <textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  placeholder="Write your note here..."
+                  rows={6}
+                  className="w-full px-0 py-2 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm placeholder-slate-400 resize-none"
+                />
+                <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                  <button 
+                    onClick={() => setNewNote("")}
+                    className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                  >
+                    Clear
+                  </button>
+                  <button 
+                    onClick={addNote}
+                    className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
+                  >
+                    Save Note
+                  </button>
+                </div>
               </div>
 
-              {/* Rich Text Editor */}
-              <div className="flex-1 flex flex-col">
-                <div className="p-4 border-b border-gray-200">
-                  {/* Text Editor Toolbar */}
-                  <div className="flex items-center space-x-2 mb-3 pb-2 border-b border-gray-200">
-                    <button className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded">
-                      <span className="font-bold text-sm">B</span>
-                    </button>
-                    <button className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded">
-                      <span className="italic text-sm">I</span>
-                    </button>
-                    <button className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded">
-                      <span className="underline text-sm">U</span>
-                    </button>
-                    <button className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded">
-                      <span className="text-sm">🔗</span>
-                    </button>
-                    <button className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded">
-                      <span className="text-sm">≡</span>
-                    </button>
-                    <button className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded">
-                      <span className="text-sm">📝</span>
-                    </button>
-                  </div>
-
-                  {/* Text Area */}
-                  <textarea
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                    placeholder="Start typing your note..."
-                    rows={8}
-                    className="w-full px-0 py-2 border-0 focus:outline-none focus:ring-0 resize-none text-sm"
-                  />
-
-                  {/* Action Buttons */}
-                  <div className="flex justify-end space-x-2 mt-4">
-                    <button
-                      onClick={() => setNewNote('')}
-                      className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={addNote}
-                      className="px-4 py-2 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-
-                {/* Notes List */}
-                <div className="flex-1 overflow-auto p-4">
-                  {customerNotes.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 text-sm">No notes yet</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {customerNotes.map((note) => (
-                        <div key={note.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-gray-500">
-                              {new Date(note.timestamp).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{note.content}</p>
+              {/* Notes List */}
+              <div className="space-y-4">
+                {customerNotes.map(note => (
+                  <div key={note.id} className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                        <Edit2 size={14} className="text-amber-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                            {new Date(note.timestamp).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </span>
                         </div>
-                      ))}
+                        <p className="text-sm text-slate-700 leading-relaxed">{note.content}</p>
+                      </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ))}
+                {customerNotes.length === 0 && (
+                  <div className="text-center py-12">
+                    <Edit2 size={48} className="mx-auto text-slate-300 mb-4" />
+                    <h3 className="text-sm font-medium text-slate-600 mb-2">No notes yet</h3>
+                    <p className="text-xs text-slate-500">Add your first note above to get started</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
