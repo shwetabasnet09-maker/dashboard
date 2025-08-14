@@ -79,8 +79,8 @@ const ActivityNotesDrawer = ({ show, customer, type, onClose, onTypeChange }) =>
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black bg-opacity-30">
-      <div className="w-2/5 min-w-[480px] h-full bg-white shadow-xl flex flex-col">
+    <div className="fixed inset-0 z-50 flex justify-end  ">
+      <div className="w-2/5 min-w-[950px] h-full bg-white  flex flex-col">
         {/* Header */}
         <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
           <h2 className="text-lg font-medium">{dummyCustomer.name}</h2>
